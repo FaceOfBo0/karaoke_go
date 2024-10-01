@@ -12,16 +12,17 @@ func (inst Instructions) String() string {
 	offset := 0
 	output := ""
 	for offset < len(inst) {
-		def, _ := Lookup(inst[offset])
-		/* 	if err != nil {
-			fmt.Errorf("definition not found: %q\n", err)
-		} */
+		def, err := Lookup(inst[offset])
+		if err != nil {
+			fmt.Printf("definition not found: %q\n", err)
+			continue
+		}
 		operands, bytesRead := ReadOperands(def, inst[offset+1:])
 		output += fmt.Sprintf("%04d %s %s\n", offset, def.Name, strings.Trim(fmt.Sprint(operands), "[]"))
 		offset += bytesRead + 1
 	}
 
-	return output[:len(output)-1]
+	return output
 }
 
 type Opcode byte

@@ -43,7 +43,8 @@ func TestInstructionsString(t *testing.T) {
 
 	expected := `0000 OpConstant 1
 0003 OpConstant 2
-0006 OpConstant 65535`
+0006 OpConstant 65535
+`
 
 	concatted := Instructions{}
 	for _, elm := range instructions {
