@@ -70,13 +70,13 @@ func testInstructions(expected []code.Instructions, actual code.Instructions) er
 	concatted := concatInstructions(expected)
 
 	if len(actual) != len(concatted) {
-		return fmt.Errorf("wrong instructions length.\nwant=%q\ngot=%q",
+		return fmt.Errorf("wrong instructions length.\nwant=%q\ngot =%q",
 			concatted, actual)
 	}
 
 	for i, ins := range concatted {
 		if actual[i] != ins {
-			return fmt.Errorf("wrong instruction at %d.\nwant=%q\ngot=%q", i, concatted, actual)
+			return fmt.Errorf("wrong instruction at %d.\nwant=%q\ngot =%q", i, concatted, actual)
 		}
 	}
 
@@ -86,11 +86,11 @@ func testInstructions(expected []code.Instructions, actual code.Instructions) er
 func testIntegerObject(expected int64, actual object.Object) error {
 	result, ok := actual.(*object.Integer)
 	if !ok {
-		return fmt.Errorf("object is not an Integer. got=%T (%+v)", actual, actual)
+		return fmt.Errorf("object is not an Integer. got =%T (%+v)", actual, actual)
 	}
 
 	if result.Value != expected {
-		return fmt.Errorf("object has wrong value. want=%d, got=%d", expected, result.Value)
+		return fmt.Errorf("object has wrong value. want=%d, got =%d", expected, result.Value)
 	}
 	return nil
 }
@@ -98,7 +98,7 @@ func testIntegerObject(expected int64, actual object.Object) error {
 func testConstants(expected []interface{}, actual []object.Object) error {
 
 	if len(expected) != len(actual) {
-		return fmt.Errorf("wrong number of constants. want=%d, got=%d", len(expected), len(actual))
+		return fmt.Errorf("wrong number of constants. want=%d, got =%d", len(expected), len(actual))
 	}
 
 	for i, constant := range expected {
