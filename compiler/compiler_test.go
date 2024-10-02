@@ -19,11 +19,12 @@ type CompilerTestCase struct {
 func TestIntegerArithemtic(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
-			input:         "1 + 2",
-			expectedConst: []interface{}{1, 2},
+			input:         "4 + 7",
+			expectedConst: []interface{}{4, 7},
 			excpectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
 			},
 		},
 	}

@@ -18,7 +18,12 @@ func (inst Instructions) String() string {
 			continue
 		}
 		operands, bytesRead := ReadOperands(def, inst[offset+1:])
-		output += fmt.Sprintf("%04d %s %s\n", offset, def.Name, strings.Trim(fmt.Sprint(operands), "[]"))
+		if len(operands) > 0 {
+			output += fmt.Sprintf("%04d %s %s\n", offset, def.Name, strings.Trim(fmt.Sprint(operands), "[]"))
+		} else {
+			output += fmt.Sprintf("%04d %s\n", offset, def.Name)
+		}
+
 		offset += bytesRead + 1
 	}
 
@@ -34,10 +39,16 @@ type Definition struct {
 
 const (
 	OpConstant Opcode = iota
+	OpAdd
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
+}
+
+func ReadUint16(inst []byte) uint16 {
+	return binary.BigEndian.Uint16(inst)
 }
 
 func ReadOperands(def *Definition, inst []byte) ([]int, int) {
@@ -46,7 +57,7 @@ func ReadOperands(def *Definition, inst []byte) ([]int, int) {
 	for i, width := range def.OperandWidths {
 		switch width {
 		case 2:
-			operands[i] = int(binary.BigEndian.Uint16(inst[offset:]))
+			operands[i] = int(ReadUint16(inst[offset:]))
 		}
 
 		offset += width
