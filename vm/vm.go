@@ -43,6 +43,16 @@ func (vm *VM) Run() error {
 			rightObj := vm.stackPop().(*object.Integer)
 			leftObj := vm.stackPop().(*object.Integer)
 			vm.stackPush(&object.Integer{Value: leftObj.Value + rightObj.Value})
+
+		case code.OpSub:
+			rightObj := vm.stackPop().(*object.Integer)
+			leftObj := vm.stackPop().(*object.Integer)
+			vm.stackPush(&object.Integer{Value: leftObj.Value - rightObj.Value})
+
+		case code.OpMult:
+			rightObj := vm.stackPop().(*object.Integer)
+			leftObj := vm.stackPop().(*object.Integer)
+			vm.stackPush(&object.Integer{Value: leftObj.Value * rightObj.Value})
 		}
 	}
 	return nil

@@ -20,6 +20,8 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"1", 1},
 		{"2", 2},
 		{"4 + 7", 11},
+		{"10 - 3", 7},
+		{"12 * 3", 36},
 	}
 
 	runVmTests(t, tests)

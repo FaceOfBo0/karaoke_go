@@ -39,12 +39,20 @@ type Definition struct {
 
 const (
 	OpConstant Opcode = iota
+	OpPop
 	OpAdd
+	OpSub
+	OpMult
+	OpDiv
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpPop:      {"OpPop", []int{}},
 	OpAdd:      {"OpAdd", []int{}},
+	OpSub:      {"OpSub", []int{}},
+	OpMult:     {"OpMult", []int{}},
+	OpDiv:      {"OpDiv", []int{}},
 }
 
 func ReadUint16(inst []byte) uint16 {

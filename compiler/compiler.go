@@ -77,6 +77,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		switch n.Token.Type {
 		case token.PLUS:
 			c.emit(code.OpAdd)
+		case token.MINUS:
+			c.emit(code.OpSub)
+		case token.ASTERISK:
+			c.emit(code.OpMult)
 		default:
 			return fmt.Errorf("unknown operator %s", n.Operator)
 		}
