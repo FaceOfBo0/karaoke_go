@@ -66,6 +66,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		c.emit(code.OpPop)
 
+	case *ast.IfExpression:
+		err := c.Compile(n.Condition)
+		if err != nil {
+			return err
+		}
+
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
 		if err != nil {
