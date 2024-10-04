@@ -25,24 +25,47 @@ func TestIntegerArithemtic(t *testing.T) {
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpAdd),
+				code.Make(code.OpPop),
 			},
 		},
 		{
-			input:         "5 - 3",
-			expectedConst: []interface{}{5, 3},
+			input:         "3 - 9",
+			expectedConst: []interface{}{3, 9},
 			excpectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpSub),
+				code.Make(code.OpPop),
 			},
 		},
 		{
-			input:         "6 * 9",
-			expectedConst: []interface{}{6, 9},
+			input:         "12 * 5",
+			expectedConst: []interface{}{12, 5},
 			excpectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpMult),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "8 / 2",
+			expectedConst: []interface{}{8, 2},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpDiv),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "5; 3",
+			expectedConst: []interface{}{5, 3},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop),
 			},
 		},
 	}

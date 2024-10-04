@@ -12,6 +12,7 @@ func TestReadOperands(t *testing.T) {
 		bytesRead int
 	}{
 		{OpConstant, []int{65535}, 2},
+		{OpPop, []int{}, 0},
 		{OpAdd, []int{}, 0},
 	}
 

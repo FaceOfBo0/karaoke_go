@@ -53,9 +53,20 @@ func (vm *VM) Run() error {
 			rightObj := vm.stackPop().(*object.Integer)
 			leftObj := vm.stackPop().(*object.Integer)
 			vm.stackPush(&object.Integer{Value: leftObj.Value * rightObj.Value})
+
+		case code.OpDiv:
+			rightObj := vm.stackPop().(*object.Integer)
+			leftObj := vm.stackPop().(*object.Integer)
+			vm.stackPush(&object.Integer{Value: leftObj.Value / rightObj.Value})
+		case code.OpPop:
+			vm.stackPop()
 		}
 	}
 	return nil
+}
+
+func (vm *VM) LastPoppedStackElem() object.Object {
+	return vm.stack[vm.sp]
 }
 
 func (vm *VM) StackTop() object.Object {

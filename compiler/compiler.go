@@ -64,6 +64,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+		c.emit(code.OpPop)
 
 	case *ast.InfixExpression:
 		err := c.Compile(n.Left)
@@ -81,6 +82,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpSub)
 		case token.ASTERISK:
 			c.emit(code.OpMult)
+		case token.SLASH:
+			c.emit(code.OpDiv)
 		default:
 			return fmt.Errorf("unknown operator %s", n.Operator)
 		}
