@@ -44,7 +44,7 @@ func TestIntegerArithemtic(t *testing.T) {
 			excpectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
-				code.Make(code.OpMult),
+				code.Make(code.OpMul),
 				code.Make(code.OpPop),
 			},
 		},
@@ -68,8 +68,139 @@ func TestIntegerArithemtic(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			input:         "-3",
+			expectedConst: []interface{}{3},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpMinus),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "-4 + 7",
+			expectedConst: []interface{}{4, 7},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpMinus),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "-(4 + 7)",
+			expectedConst: []interface{}{4, 7},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpMinus),
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
+	runCompilerTests(t, tests)
+}
+
+func TestBooleanExpressions(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input:         "true",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "false",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpFalse),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "false == true",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpFalse),
+				code.Make(code.OpTrue),
+				code.Make(code.OpEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "3 == 1",
+			expectedConst: []interface{}{3, 1},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "3 != 1",
+			expectedConst: []interface{}{3, 1},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpNotEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "true != true",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpTrue),
+				code.Make(code.OpNotEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "3 > 1",
+			expectedConst: []interface{}{3, 1},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreaterThan),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "3 < 1",
+			expectedConst: []interface{}{1, 3},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreaterThan),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "!true",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpBang),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "!false",
+			expectedConst: []interface{}{},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpFalse),
+				code.Make(code.OpBang),
+				code.Make(code.OpPop),
+			},
+		},
+	}
 	runCompilerTests(t, tests)
 }
 

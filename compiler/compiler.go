@@ -66,7 +66,34 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		c.emit(code.OpPop)
 
+	case *ast.PrefixExpression:
+		err := c.Compile(n.Right)
+		if err != nil {
+			return err
+		}
+
+		switch n.Token.Type {
+		case token.BANG:
+			c.emit(code.OpBang)
+		case token.MINUS:
+			c.emit(code.OpMinus)
+		default:
+			return fmt.Errorf("unknown operator %s", n.Operator)
+		}
+
 	case *ast.InfixExpression:
+		if n.Token.Type == token.LT {
+			err := c.Compile(n.Right)
+			if err != nil {
+				return err
+			}
+			err = c.Compile(n.Left)
+			if err != nil {
+				return err
+			}
+			c.emit(code.OpGreaterThan)
+			return nil
+		}
 		err := c.Compile(n.Left)
 		if err != nil {
 			return err
@@ -81,9 +108,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 		case token.MINUS:
 			c.emit(code.OpSub)
 		case token.ASTERISK:
-			c.emit(code.OpMult)
+			c.emit(code.OpMul)
 		case token.SLASH:
 			c.emit(code.OpDiv)
+		case token.EQ:
+			c.emit(code.OpEqual)
+		case token.NOT_EQ:
+			c.emit(code.OpNotEqual)
+		case token.GT:
+			c.emit(code.OpGreaterThan)
 		default:
 			return fmt.Errorf("unknown operator %s", n.Operator)
 		}
@@ -91,6 +124,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.IntegerLiteral:
 		intObj := &object.Integer{Value: n.Value}
 		c.emit(code.OpConstant, c.addConstant(intObj))
+
+	case *ast.Boolean:
+		if n.Value {
+			c.emit(code.OpTrue)
+		} else {
+			c.emit(code.OpFalse)
+		}
+
 	}
+
 	return nil
 }
