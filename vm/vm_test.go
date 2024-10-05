@@ -73,7 +73,9 @@ func TestBooleanExpressions(t *testing.T) {
 
 func TestConditionals(t *testing.T) {
 	tests := []vmTestCase{
+		{"if (false) { 10 }; 3333;", 3333},
 		{"if (true) { 10 };", 10},
+		{"if (true) { 10 }; 333;", 333},
 	}
 
 	runVmTests(t, tests)

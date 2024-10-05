@@ -110,6 +110,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		code.PutUint16(c.instructions[jmpIdx+1:], uint16(len(c.instructions)))
 
+		err = c.Compile(n.Alternative)
+		if err != nil {
+			return err
+		}
+
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
 		if err != nil {
