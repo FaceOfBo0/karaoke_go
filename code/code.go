@@ -77,6 +77,10 @@ func ReadUint16(inst []byte) uint16 {
 	return binary.BigEndian.Uint16(inst)
 }
 
+func PutUint16(inst []byte, val uint16) {
+	binary.BigEndian.PutUint16(inst, val)
+}
+
 func ReadOperands(def *Definition, inst []byte) ([]int, int) {
 	operands := make([]int, len(def.OperandWidths))
 	offset := 0
@@ -110,7 +114,7 @@ func Make(op Opcode, operands ...int) []byte {
 		width := def.OperandWidths[i]
 		switch width {
 		case 2:
-			binary.BigEndian.PutUint16(inst[offset:], uint16(el))
+			PutUint16(inst[offset:], uint16(el))
 		}
 		offset += width
 	}
