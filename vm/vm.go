@@ -33,6 +33,17 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpJumpNotTruthy:
+			condObj := vm.stackPop().(*object.Boolean)
+			/* if cond.Type() != object.BOOLEAN_OBJ {
+				return fmt.Errorf("wrong type in condition, want=boolean, got=%T", cond)
+			}
+			condObj = condObj.(*object.Boolean) */
+			if !condObj.Value {
+				jmpIdx := code.ReadUint16(vm.instructions[ip+1:])
+				ip = int(jmpIdx)
+			}
+
 		case code.OpConstant:
 			constIdx := code.ReadUint16(vm.instructions[ip+1:])
 			ip += 2
