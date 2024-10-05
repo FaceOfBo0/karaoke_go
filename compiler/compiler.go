@@ -8,9 +8,16 @@ import (
 	"monkey/token"
 )
 
+type EmittedInstruction struct {
+	Opcode code.Opcode
+	Pos    int
+}
+
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
+	lastInst     EmittedInstruction
+	prevInst     EmittedInstruction
 }
 
 type Bytecode struct {
@@ -22,6 +29,8 @@ func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+		lastInst:     EmittedInstruction{},
+		prevInst:     EmittedInstruction{},
 	}
 }
 
@@ -43,9 +52,16 @@ func (c *Compiler) addInstruction(in code.Instructions) int {
 	return posInst
 }
 
+func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
+	c.prevInst = c.lastInst
+	c.lastInst = EmittedInstruction{Opcode: op, Pos: pos}
+}
+
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	inst := code.Make(op, operands...)
 	pos := c.addInstruction(inst)
+
+	c.setLastInstruction(op, pos)
 	return pos
 }
 
@@ -54,6 +70,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.Program:
 		for _, st := range n.Statements {
 			err := c.Compile(st)
+			if err != nil {
+				return err
+			}
+		}
+
+	case *ast.BlockStatement:
+		for _, elm := range n.Statements {
+			err := c.Compile(elm)
 			if err != nil {
 				return err
 			}
@@ -71,6 +95,20 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+		jmpIdx := c.emit(code.OpJumpNotTruthy, 9999)
+
+		err = c.Compile(n.Consequence)
+		if err != nil {
+			return err
+		}
+
+		if c.lastInst.Opcode == code.OpPop {
+			c.instructions = c.instructions[:c.lastInst.Pos]
+			c.lastInst = c.prevInst
+		}
+
+		code.PutUint16(c.instructions[jmpIdx+1:], uint16(len(c.instructions)))
 
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)

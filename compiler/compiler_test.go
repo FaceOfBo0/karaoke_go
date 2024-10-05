@@ -250,7 +250,7 @@ func runCompilerTests(t *testing.T, tests []CompilerTestCase) {
 
 		err = testConstants(tt.expectedConst, bytecode.Constants)
 		if err != nil {
-			t.Fatalf("testInstructions failed: %s", err)
+			t.Fatalf("testConstants failed: %s", err)
 		}
 
 	}
