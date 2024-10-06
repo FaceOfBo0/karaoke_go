@@ -57,6 +57,13 @@ func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 	c.lastInst = EmittedInstruction{Opcode: op, Pos: pos}
 }
 
+func (c *Compiler) deleteLastOpPop() {
+	if c.lastInst.Opcode == code.OpPop {
+		c.instructions = c.instructions[:c.lastInst.Pos]
+		c.lastInst = c.prevInst
+	}
+}
+
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	inst := code.Make(op, operands...)
 	pos := c.addInstruction(inst)
@@ -96,25 +103,31 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		jmpIdx := c.emit(code.OpJumpNotTruthy, 9999)
+		jmpNotTruthyIdx := c.emit(code.OpJumpNotTruthy, 9999)
 
 		err = c.Compile(n.Consequence)
 		if err != nil {
 			return err
 		}
 
-		if c.lastInst.Opcode == code.OpPop {
-			c.instructions = c.instructions[:c.lastInst.Pos]
-			c.lastInst = c.prevInst
+		c.deleteLastOpPop()
+
+		jmpIdx := c.emit(code.OpJump, 9999)
+
+		code.PutUint16(c.instructions[jmpNotTruthyIdx+1:], uint16(len(c.instructions)))
+
+		if n.Alternative != nil {
+			err = c.Compile(n.Alternative)
+			if err != nil {
+				return err
+			}
+
+			c.deleteLastOpPop()
+		} else {
+			c.emit(code.OpNull)
 		}
 
 		code.PutUint16(c.instructions[jmpIdx+1:], uint16(len(c.instructions)))
-
-		err = c.Compile(n.Alternative)
-		if err != nil {
-			return err
-		}
-
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
 		if err != nil {

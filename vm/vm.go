@@ -9,6 +9,7 @@ import (
 
 const StackSize = 2048
 
+var Null = &object.Null{}
 var trueObj = &object.Boolean{Value: true}
 var falseObj = &object.Boolean{Value: false}
 
@@ -33,18 +34,21 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpNull:
+			vm.stackPush(Null)
+
 		case code.OpJumpNotTruthy:
-			condObj := vm.StackTop().(*object.Boolean)
-			/* if cond.Type() != object.BOOLEAN_OBJ {
-				return fmt.Errorf("wrong type in condition, want=boolean, got=%T", cond)
-			}
-			condObj = condObj.(*object.Boolean) */
-			if !condObj.Value {
-				jmpIdx := code.ReadUint16(vm.instructions[ip+1:])
-				ip = int(jmpIdx) - 1
+			condObj := vm.stackPop()
+
+			if !isTruthy(condObj) {
+				ip = int(code.ReadUint16(vm.instructions[ip+1:])) - 1
 			} else {
 				ip += 2
 			}
+
+		case code.OpJump:
+			jmpIdx := code.ReadUint16(vm.instructions[ip+1:])
+			ip = int(jmpIdx) - 1
 
 		case code.OpConstant:
 			constIdx := code.ReadUint16(vm.instructions[ip+1:])
@@ -119,6 +123,8 @@ func (vm *VM) Run() error {
 func (vm *VM) execBangOp() error {
 	operand := vm.stackPop()
 	switch operand {
+	case Null:
+		return vm.stackPush(trueObj)
 	case falseObj:
 		return vm.stackPush(trueObj)
 	default:
@@ -155,6 +161,18 @@ func (vm *VM) execComp(op code.Opcode) error {
 		return vm.stackPush(nativeBoolToBoolObj(leftObj != rightObj))
 	default:
 		return fmt.Errorf("unknown operator: %d (%s %s)", op, leftObj.Type(), rightObj.Type())
+	}
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj := obj.(type) {
+	case *object.Boolean:
+		return obj.Value
+	case *object.Null:
+		return false
+	default:
+		return true
+
 	}
 }
 

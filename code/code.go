@@ -53,6 +53,7 @@ const (
 	OpBang
 	OpJumpNotTruthy
 	OpJump
+	OpNull
 )
 
 var definitions = map[Opcode]*Definition{
@@ -71,6 +72,7 @@ var definitions = map[Opcode]*Definition{
 	OpGreaterThan:   {"OpGreaterThan", []int{}},
 	OpMinus:         {"OpMinus", []int{}},
 	OpBang:          {"OpBang", []int{}},
+	OpNull:          {"OpNull", []int{}},
 }
 
 func ReadUint16(inst []byte) uint16 {
