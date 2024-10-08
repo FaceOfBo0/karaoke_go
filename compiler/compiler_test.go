@@ -16,6 +16,27 @@ type CompilerTestCase struct {
 	excpectedInsts []code.Instructions
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input:         "let x = 66; let y = 33; let z = x + y",
+			expectedConst: []interface{}{66, 33},
+			excpectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpSetGlobal, 1),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpGetGlobal, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpSetGlobal, 2),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func TestConditionals(t *testing.T) {
 	tests := []CompilerTestCase{
 		{

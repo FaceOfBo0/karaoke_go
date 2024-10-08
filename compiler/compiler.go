@@ -25,6 +25,10 @@ type Bytecode struct {
 	Constants    []object.Object
 }
 
+var (
+	globalIdx = 0
+)
+
 func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
@@ -82,6 +86,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
+	case *ast.LetStatement:
+		c.emit(code.OpSetGlobal, globalIdx)
+
+		globalIdx++
 	case *ast.BlockStatement:
 		for _, elm := range n.Statements {
 			err := c.Compile(elm)
@@ -128,6 +136,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		code.PutUint16(c.instructions[jmpIdx+1:], uint16(len(c.instructions)))
+
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
 		if err != nil {
