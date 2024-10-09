@@ -16,6 +16,7 @@ type EmittedInstruction struct {
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
+	symbolTable  *SymbolTable
 	lastInst     EmittedInstruction
 	prevInst     EmittedInstruction
 }
@@ -25,14 +26,11 @@ type Bytecode struct {
 	Constants    []object.Object
 }
 
-var (
-	globalIdx = 0
-)
-
 func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+		symbolTable:  NewSymbolTable(),
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
 	}
@@ -87,9 +85,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.LetStatement:
-		c.emit(code.OpSetGlobal, globalIdx)
+		err := c.Compile(n.Value)
+		if err != nil {
+			return err
+		}
+		symbol := c.symbolTable.Define(n.Name.Value)
+		c.emit(code.OpSetGlobal, symbol.Idx)
 
-		globalIdx++
 	case *ast.BlockStatement:
 		for _, elm := range n.Statements {
 			err := c.Compile(elm)
@@ -191,6 +193,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("unknown operator %s", n.Operator)
 		}
+
+	case *ast.Identifier:
+		sym, ok := c.symbolTable.Resolve(n.Value)
+		if !ok {
+			return fmt.Errorf("variable %s is undefined", n.Value)
+		}
+
+		c.emit(code.OpGetGlobal, sym.Idx)
 
 	case *ast.IntegerLiteral:
 		intObj := &object.Integer{Value: n.Value}

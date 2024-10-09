@@ -34,6 +34,10 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpSetGlobal:
+
+		case code.OpGetGlobal:
+
 		case code.OpNull:
 			vm.stackPush(Null)
 

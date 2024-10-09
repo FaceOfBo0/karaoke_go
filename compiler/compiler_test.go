@@ -19,6 +19,49 @@ type CompilerTestCase struct {
 func TestLetStatements(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
+			input: `
+			let one = 1;
+			let two = 2;
+			`,
+			expectedConst: []interface{}{1, 2},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpSetGlobal, 1),
+			},
+		},
+
+		{
+			input: `
+			let one = 1;
+			one;
+			`,
+			expectedConst: []interface{}{1},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: `
+			let one = 1;
+			let two = one;
+			two;
+			`,
+			expectedConst: []interface{}{1},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpSetGlobal, 1),
+				code.Make(code.OpGetGlobal, 1),
+				code.Make(code.OpPop),
+			},
+		},
+		{
 			input:         "let x = 66; let y = 33; let z = x + y",
 			expectedConst: []interface{}{66, 33},
 			expectedInsts: []code.Instructions{
@@ -32,18 +75,6 @@ func TestLetStatements(t *testing.T) {
 				code.Make(code.OpSetGlobal, 2),
 			},
 		},
-		{
-			input: `
-			let one = 1;
-			let two = 2;
-			`,
-			expectedConst: []interface{}{1, 2},
-			expectedInsts: []code.Instructions{
-				code.Make(code.OpConstant, 0),
-				code.Make(code.OpSetGlobal, 0),
-				code.Make(code.OpConstant, 1),
-				code.Make(code.OpSetGlobal, 1),
-			}},
 	}
 
 	runCompilerTests(t, tests)
