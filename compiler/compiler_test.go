@@ -426,6 +426,18 @@ func testIntegerObject(expected int64, actual object.Object) error {
 	return nil
 }
 
+func testStringObject(expected string, actual object.Object) error {
+	result, ok := actual.(*object.String)
+	if !ok {
+		return fmt.Errorf("object is not an String. got =%T (%+v)", actual, actual)
+	}
+
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. want=%s, got =%s", expected, result.Value)
+	}
+	return nil
+}
+
 func testConstants(expected []interface{}, actual []object.Object) error {
 
 	if len(expected) != len(actual) {
@@ -434,6 +446,12 @@ func testConstants(expected []interface{}, actual []object.Object) error {
 
 	for i, constant := range expected {
 		switch constant := constant.(type) {
+		case string:
+			err := testStringObject(string(constant), actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testStringObject failed: %s", i, err)
+			}
+
 		case int:
 			err := testIntegerObject(int64(constant), actual[i])
 			if err != nil {

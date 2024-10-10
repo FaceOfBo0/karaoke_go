@@ -86,25 +86,11 @@ func (vm *VM) Run() error {
 				return err
 			}
 
-		case code.OpAdd:
-			rightObj := vm.stackPop().(*object.Integer)
-			leftObj := vm.stackPop().(*object.Integer)
-			vm.stackPush(&object.Integer{Value: leftObj.Value + rightObj.Value})
-
-		case code.OpSub:
-			rightObj := vm.stackPop().(*object.Integer)
-			leftObj := vm.stackPop().(*object.Integer)
-			vm.stackPush(&object.Integer{Value: leftObj.Value - rightObj.Value})
-
-		case code.OpMul:
-			rightObj := vm.stackPop().(*object.Integer)
-			leftObj := vm.stackPop().(*object.Integer)
-			vm.stackPush(&object.Integer{Value: leftObj.Value * rightObj.Value})
-
-		case code.OpDiv:
-			rightObj := vm.stackPop().(*object.Integer)
-			leftObj := vm.stackPop().(*object.Integer)
-			vm.stackPush(&object.Integer{Value: leftObj.Value / rightObj.Value})
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+			err := vm.execBinaryOp(op)
+			if err != nil {
+				return err
+			}
 
 		case code.OpPop:
 			vm.stackPop()
@@ -145,6 +131,50 @@ func (vm *VM) Run() error {
 		}
 	}
 	return nil
+}
+
+func (vm *VM) execBinaryIntOp(operand code.Opcode, left object.Object, right object.Object) error {
+	leftVal := left.(*object.Integer).Value
+	rightVal := right.(*object.Integer).Value
+	var result int64
+	switch operand {
+	case code.OpAdd:
+		result = leftVal + rightVal
+	case code.OpSub:
+		result = leftVal - rightVal
+	case code.OpMul:
+		result = leftVal * rightVal
+	case code.OpDiv:
+		result = leftVal / rightVal
+	default:
+		return fmt.Errorf("unknown Integer operation: %d", operand)
+	}
+
+	return vm.stackPush(&object.Integer{Value: result})
+
+}
+
+func (vm *VM) execBinaryStrOp(left object.Object, right object.Object) error {
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
+
+	return vm.stackPush(&object.String{Value: leftVal + rightVal})
+}
+
+func (vm *VM) execBinaryOp(operand code.Opcode) error {
+	rightObj := vm.stackPop()
+	leftObj := vm.stackPop()
+	rightType := rightObj.Type()
+	leftType := leftObj.Type()
+
+	if rightType == object.INTEGER_OBJ && leftType == object.INTEGER_OBJ {
+		return vm.execBinaryIntOp(operand, leftObj, rightObj)
+	} else if rightType == object.STRING_OBJ && leftType == object.STRING_OBJ {
+		return vm.execBinaryStrOp(leftObj, rightObj)
+	}
+
+	return fmt.Errorf("unsupported types for binary operation: %s %s",
+		leftType, rightType)
 }
 
 func (vm *VM) execBangOp() error {
