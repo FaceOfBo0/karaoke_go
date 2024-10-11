@@ -16,6 +16,36 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
+func TestArrays(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input:         `[1, 2, 3, 4]`,
+			expectedConst: []interface{}{1, 2, 3, 4},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpArray, 4),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         `[1 + 2, 3 + 4, 5 + 6]`,
+			expectedConst: []interface{}{3, 7, 11},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpArray, 3),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func TestStringExpressions(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
