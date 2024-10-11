@@ -15,6 +15,15 @@ type vmTestCase struct {
 	expected interface{}
 }
 
+func TestArrayLiterals(t *testing.T) {
+	tests := []vmTestCase{
+		{`[]`, []int{}},
+		{`[1, 2, 3]`, []int{1, 2, 3}},
+		{`[1+2,3+4,5+6]`, []int{4, 7, 11}},
+	}
+	runVmTests(t, tests)
+}
+
 func TestStringExpressions(t *testing.T) {
 	tests := []vmTestCase{
 		{`"monkey"`, "monkey"},

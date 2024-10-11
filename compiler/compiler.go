@@ -224,6 +224,16 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpFalse)
 		}
 
+	case *ast.ArrayLiteral:
+		for _, elem := range n.Elements {
+			err := c.Compile(elem)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpArray, len(n.Elements))
+
 	}
 
 	return nil

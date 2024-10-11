@@ -46,6 +46,9 @@ func (vm *VM) Run() error {
 
 		switch op {
 
+		case code.OpArray:
+			code.ReadUint16(vm.instructions[ip+1:])
+
 		case code.OpSetGlobal:
 			objIdx := code.ReadUint16(vm.instructions[ip+1:])
 			ip += 2
