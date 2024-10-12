@@ -5,7 +5,6 @@ import (
 	"monkey/code"
 	"monkey/compiler"
 	"monkey/object"
-	"slices"
 )
 
 const (
@@ -46,18 +45,38 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpHash:
+			lenHash := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			pairs := make(map[object.HashKey]object.HashPair, lenHash)
+			for i := 0; i < lenHash; i++ {
+				val := vm.stackPop()
+				key := vm.stackPop()
+
+				hashKey, ok := key.(object.Hashable)
+				if !ok {
+					return fmt.Errorf("unusable as hash key: %s", key.Type())
+				}
+
+				pairs[hashKey.HashKey()] = object.HashPair{Key: key, Value: val}
+			}
+
+			err := vm.stackPush(&object.Hash{Pairs: pairs})
+			if err != nil {
+				return err
+			}
 
 		case code.OpArray:
 			lenArr := int(code.ReadUint16(vm.instructions[ip+1:]))
 			ip += 2
 
-			arrObj := &object.Array{}
-			for i := 0; i < lenArr; i++ {
-				arrObj.Elements = append(arrObj.Elements, vm.stackPop())
+			array := make([]object.Object, lenArr)
+			for i := lenArr - 1; i >= 0; i-- {
+				array[i] = vm.stackPop()
 			}
-			slices.Reverse(arrObj.Elements)
 
-			err := vm.stackPush(arrObj)
+			err := vm.stackPush(&object.Array{Elements: array})
 			if err != nil {
 				return err
 			}

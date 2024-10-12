@@ -58,6 +58,7 @@ const (
 	OpSetGlobal
 	OpArray
 	OpHash
+	OpIndex
 )
 
 var definitions = map[Opcode]*Definition{
@@ -81,6 +82,7 @@ var definitions = map[Opcode]*Definition{
 	OpMinus:         {"OpMinus", []int{}},
 	OpBang:          {"OpBang", []int{}},
 	OpNull:          {"OpNull", []int{}},
+	OpIndex:         {"OpIndex", []int{}},
 }
 
 func ReadUint16(inst []byte) uint16 {
