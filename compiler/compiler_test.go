@@ -16,6 +16,71 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
+func TestHashLiterals(t *testing.T) {
+	tests := []CompilerTestCase{
+		/* {
+			input:         `{"one": 1, "two": 2, "three": 3}`,
+			expectedConst: []interface{}{"one", 1, "two", 2, "three", 3},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpConstant, 5),
+				code.Make(code.OpHash, 3),
+				code.Make(code.OpPop),
+			},
+		}, */
+		{
+			input:         `{}`,
+			expectedConst: []interface{}{},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpHash, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         `{1 + 1: 2 * 2, 3 + 3: 4 * 4}`,
+			expectedConst: []interface{}{1, 1, 2, 2, 3, 3, 4, 4},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpMul),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpConstant, 5),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 6),
+				code.Make(code.OpConstant, 7),
+				code.Make(code.OpMul),
+				code.Make(code.OpHash, 2),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:         "{1: 2 + 3, 4: 5 * 6}",
+			expectedConst: []interface{}{1, 2, 3, 4, 5, 6},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpConstant, 5),
+				code.Make(code.OpMul),
+				code.Make(code.OpHash, 2),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func TestArrayLiterls(t *testing.T) {
 	tests := []CompilerTestCase{
 		{

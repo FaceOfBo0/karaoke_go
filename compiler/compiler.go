@@ -6,6 +6,8 @@ import (
 	"monkey/code"
 	"monkey/object"
 	"monkey/token"
+	"slices"
+	"strings"
 )
 
 type EmittedInstruction struct {
@@ -231,9 +233,31 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
-
 		c.emit(code.OpArray, len(n.Elements))
 
+	case *ast.HashLiteral:
+		keys := make([]ast.Expression, 0, len(n.Pairs))
+		for e := range n.Pairs {
+			keys = append(keys, e)
+		}
+
+		slices.SortFunc(keys, func(a ast.Expression, b ast.Expression) int {
+			return strings.Compare(a.String(), b.String())
+		})
+
+		for _, key := range keys {
+			err := c.Compile(key)
+			if err != nil {
+				return err
+			}
+
+			err = c.Compile(n.Pairs[key])
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpHash, len(n.Pairs))
 	}
 
 	return nil

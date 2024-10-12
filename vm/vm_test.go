@@ -17,9 +17,9 @@ type vmTestCase struct {
 
 func TestArrayLiterals(t *testing.T) {
 	tests := []vmTestCase{
-		{`[]`, []int{}},
 		{`[1, 2, 3]`, []int{1, 2, 3}},
-		{`[1+2,3+4,5+6]`, []int{4, 7, 11}},
+		{`[1+2, 3*4, 8-4]`, []int{3, 12, 4}},
+		{`[]`, []int{}},
 	}
 	runVmTests(t, tests)
 }

@@ -5,6 +5,7 @@ import (
 	"monkey/code"
 	"monkey/compiler"
 	"monkey/object"
+	"slices"
 )
 
 const (
@@ -47,7 +48,19 @@ func (vm *VM) Run() error {
 		switch op {
 
 		case code.OpArray:
-			code.ReadUint16(vm.instructions[ip+1:])
+			lenArr := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			arrObj := &object.Array{}
+			for i := 0; i < lenArr; i++ {
+				arrObj.Elements = append(arrObj.Elements, vm.stackPop())
+			}
+			slices.Reverse(arrObj.Elements)
+
+			err := vm.stackPush(arrObj)
+			if err != nil {
+				return err
+			}
 
 		case code.OpSetGlobal:
 			objIdx := code.ReadUint16(vm.instructions[ip+1:])
