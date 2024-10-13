@@ -16,30 +16,44 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
-func TestHashLiterals(t *testing.T) {
+func TestIndexExpressions(t *testing.T) {
 	tests := []CompilerTestCase{
-		/* {
-			input:         `{"one": 1, "two": 2, "three": 3}`,
-			expectedConst: []interface{}{"one", 1, "two", 2, "three", 3},
+		{
+			input:         "[1, 2, 3][1 + 1]",
+			expectedConst: []interface{}{1, 2, 3, 1, 1},
 			expectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpConstant, 2),
+				code.Make(code.OpArray, 3),
 				code.Make(code.OpConstant, 3),
 				code.Make(code.OpConstant, 4),
-				code.Make(code.OpConstant, 5),
-				code.Make(code.OpHash, 3),
-				code.Make(code.OpPop),
-			},
-		}, */
-		{
-			input:         `{}`,
-			expectedConst: []interface{}{},
-			expectedInsts: []code.Instructions{
-				code.Make(code.OpHash, 0),
+				code.Make(code.OpAdd),
+				code.Make(code.OpIndex),
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			input:         "{1: 2}[2 - 1]",
+			expectedConst: []interface{}{1, 2, 2, 1},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpHash, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpSub),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
+func TestHashLiterals(t *testing.T) {
+	tests := []CompilerTestCase{
 		{
 			input:         `{1 + 1: 2 * 2, 3 + 3: 4 * 4}`,
 			expectedConst: []interface{}{1, 1, 2, 2, 3, 3, 4, 4},

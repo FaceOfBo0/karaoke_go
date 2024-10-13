@@ -45,6 +45,44 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpIndex:
+			idxObj := vm.stackPop()
+			arrObj := vm.stackPop()
+
+			switch arrObj := arrObj.(type) {
+			case *object.Hash:
+				idx, ok := idxObj.(object.Hashable)
+				if !ok {
+					return fmt.Errorf("unknown index type for hash: %s", idxObj.Type())
+				}
+
+				hashPair, ok := arrObj.Pairs[idx.HashKey()]
+				if !ok {
+					vm.stackPush(Null)
+				} else {
+					err := vm.stackPush(hashPair.Value)
+					if err != nil {
+						return err
+					}
+				}
+
+			case *object.Array:
+				idx, ok := idxObj.(*object.Integer)
+				if !ok {
+					return fmt.Errorf("unknown index type for array: %s", idxObj.Type())
+				}
+
+				max := int64(len(arrObj.Elements) - 1)
+				if idx.Value < 0 || idx.Value > max {
+					vm.stackPush(Null)
+				} else {
+					err := vm.stackPush(arrObj.Elements[idx.Value])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
 		case code.OpHash:
 			lenHash := int(code.ReadUint16(vm.instructions[ip+1:]))
 			ip += 2

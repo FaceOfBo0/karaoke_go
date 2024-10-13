@@ -116,6 +116,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		c.emit(code.OpPop)
 
+	case *ast.IndexExpression:
+		err := c.Compile(n.Left)
+		if err != nil {
+			return err
+		}
+
+		err = c.Compile(n.Index)
+		if err != nil {
+			return err
+		}
+
+		c.emit(code.OpIndex)
+
 	case *ast.IfExpression:
 		err := c.Compile(n.Condition)
 		if err != nil {
