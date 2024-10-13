@@ -2,11 +2,11 @@ package compiler
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/code"
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
+	"karaoke/ast"
+	"karaoke/code"
+	"karaoke/lexer"
+	"karaoke/object"
+	"karaoke/parser"
 	"testing"
 )
 

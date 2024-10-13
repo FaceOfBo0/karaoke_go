@@ -2,11 +2,11 @@ package vm
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/compiler"
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
+	"karaoke/ast"
+	"karaoke/compiler"
+	"karaoke/lexer"
+	"karaoke/object"
+	"karaoke/parser"
 	"testing"
 )
 

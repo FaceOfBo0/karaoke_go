@@ -2,8 +2,8 @@ package evaluator
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/object"
+	"karaoke/ast"
+	"karaoke/object"
 )
 
 var (

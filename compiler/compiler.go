@@ -2,10 +2,10 @@ package compiler
 
 import (
 	"fmt"
-	"monkey/ast"
-	"monkey/code"
-	"monkey/object"
-	"monkey/token"
+	"karaoke/ast"
+	"karaoke/code"
+	"karaoke/object"
+	"karaoke/token"
 	"slices"
 	"strings"
 )

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"monkey/repl"
+	"karaoke/repl"
 	"os"
 	"os/user"
 )

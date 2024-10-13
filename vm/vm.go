@@ -2,9 +2,9 @@ package vm
 
 import (
 	"fmt"
-	"monkey/code"
-	"monkey/compiler"
-	"monkey/object"
+	"karaoke/code"
+	"karaoke/compiler"
+	"karaoke/object"
 )
 
 const (

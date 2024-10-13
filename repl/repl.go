@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"monkey/compiler"
-	"monkey/lexer"
-	"monkey/object"
-	"monkey/parser"
-	"monkey/vm"
+	"karaoke/compiler"
+	"karaoke/lexer"
+	"karaoke/object"
+	"karaoke/parser"
+	"karaoke/vm"
 )
 
 const PROMPT = ">> "
