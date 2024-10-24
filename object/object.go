@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"karaoke/ast"
+	"karaoke/code"
 	"strings"
 )
 
@@ -22,8 +23,9 @@ const (
 
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 
-	FUNCTION_OBJ = "FUNCTION"
-	BUILTIN_OBJ  = "BUILTIN"
+	FUNCTION_OBJ      = "FUNCTION"
+	COMP_FUNCTION_OBJ = "COMP_FUNCTION_OBJ"
+	BUILTIN_OBJ       = "BUILTIN"
 
 	ARRAY_OBJ = "ARRAY"
 	HASH_OBJ  = "HASH"
@@ -89,6 +91,15 @@ type Error struct {
 
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (cf *CompiledFunction) Type() ObjectType { return COMP_FUNCTION_OBJ }
+func (cf *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", cf)
+}
 
 type Function struct {
 	Parameters []*ast.Identifier
