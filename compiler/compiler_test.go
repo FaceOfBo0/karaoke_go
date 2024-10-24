@@ -16,6 +16,58 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
+func TestCompilerScopes(t *testing.T) {
+	compiler := New()
+	if compiler.scopeIdx != 0 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
+	}
+
+	compiler.emit(code.OpMul)
+
+	compiler.enterScope()
+	if compiler.scopeIdx != 1 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 1)
+	}
+
+	compiler.emit(code.OpSub)
+
+	if len(compiler.scopes[compiler.scopeIdx].instructions) != 1 {
+		t.Errorf("instructions length wrong. got=%d",
+			len(compiler.scopes[compiler.scopeIdx].instructions))
+	}
+
+	last := compiler.scopes[compiler.scopeIdx].lastInst
+	if last.Opcode != code.OpSub {
+		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
+			last.Opcode, code.OpSub)
+	}
+
+	compiler.leaveScope()
+	if compiler.scopeIdx != 0 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d",
+			compiler.scopeIdx, 0)
+	}
+
+	compiler.emit(code.OpAdd)
+
+	if len(compiler.scopes[compiler.scopeIdx].instructions) != 2 {
+		t.Errorf("instructions length wrong. got=%d",
+			len(compiler.scopes[compiler.scopeIdx].instructions))
+	}
+
+	last = compiler.scopes[compiler.scopeIdx].lastInst
+	if last.Opcode != code.OpAdd {
+		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
+			last.Opcode, code.OpAdd)
+	}
+
+	previous := compiler.scopes[compiler.scopeIdx].prevInst
+	if previous.Opcode != code.OpMul {
+		t.Errorf("previousInstruction.Opcode wrong. got=%d, want=%d",
+			previous.Opcode, code.OpMul)
+	}
+}
+
 func TestFunctionCalls(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
@@ -44,17 +96,18 @@ func TestFunctionCalls(t *testing.T) {
 func TestFunctionLiterals(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
-			input: "fn () { 5 + 10 }",
-			expectedConst: []interface{}{5, 10, []code.Instructions{
-				code.Make(code.OpConstant, 0),
-				code.Make(code.OpConstant, 1),
-				code.Make(code.OpAdd),
-			},
+			input: "fn () { return 5 + 10 }",
+			expectedConst: []interface{}{
+				5,
+				10,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpAdd),
+					code.Make(code.OpReturnValue),
+				},
 			},
 			expectedInsts: []code.Instructions{
-				code.Make(code.OpConstant, 0),
-				code.Make(code.OpConstant, 1),
-				code.Make(code.OpAdd),
 				code.Make(code.OpConstant, 2),
 				code.Make(code.OpPop),
 			},
@@ -627,6 +680,18 @@ func testConstants(expected []interface{}, actual []object.Object) error {
 			err := testIntegerObject(int64(constant), actual[i])
 			if err != nil {
 				return fmt.Errorf("constant %d - testIntegerObject failed: %s", i, err)
+			}
+
+		case []code.Instructions:
+			fn, ok := actual[i].(*object.CompiledFunction)
+			if !ok {
+				return fmt.Errorf("constant %d - not a function: %T", i, actual[i])
+			}
+
+			err := testInstructions(constant, fn.Instructions)
+
+			if err != nil {
+				return fmt.Errorf("constant %d - testInstructions failed: %s", i, err)
 			}
 
 		}

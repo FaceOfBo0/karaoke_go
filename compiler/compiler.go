@@ -10,22 +10,30 @@ import (
 	"strings"
 )
 
-type EmittedInstruction struct {
-	Opcode code.Opcode
-	Pos    int
-}
-
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
 	symbolTable  *SymbolTable
 	lastInst     EmittedInstruction
 	prevInst     EmittedInstruction
+	scopes       []CompilationScope
+	scopeIdx     int
 }
 
 type Bytecode struct {
 	Instructions code.Instructions
 	Constants    []object.Object
+}
+
+type EmittedInstruction struct {
+	Opcode code.Opcode
+	Pos    int
+}
+
+type CompilationScope struct {
+	instructions code.Instructions
+	lastInst     EmittedInstruction
+	prevInst     EmittedInstruction
 }
 
 func NewWithState(s *SymbolTable, consts []object.Object) *Compiler {
@@ -42,7 +50,16 @@ func New() *Compiler {
 		symbolTable:  NewSymbolTable(),
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
+		scopes:       []CompilationScope{},
 	}
+}
+
+func (c *Compiler) enterScope() {
+	//TODO: test
+}
+
+func (c *Compiler) leaveScope() {
+
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
@@ -109,10 +126,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-	case *ast.FunctionLiteral:
-		c.Compile(n.Body)
+	case *ast.ReturnStatement:
+		c.Compile(n.ReturnValue)
 		c.deleteLastOpPop()
+		c.emit(code.OpReturnValue)
+
+	case *ast.FunctionLiteral:
+		// save the old instruction state to override the compilers instructions
+		oldInsts := c.instructions
+		c.Compile(n.Body)
+
 		funcObj := &object.CompiledFunction{Instructions: c.instructions}
+		c.instructions = oldInsts
+
 		c.emit(code.OpConstant, c.addConstant(funcObj))
 
 	case *ast.CallExpression:
