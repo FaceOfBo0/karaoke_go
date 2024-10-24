@@ -109,6 +109,16 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
+	case *ast.FunctionLiteral:
+		c.Compile(n.Body)
+		c.deleteLastOpPop()
+		funcObj := &object.CompiledFunction{Instructions: c.instructions}
+		c.emit(code.OpConstant, c.addConstant(funcObj))
+
+	case *ast.CallExpression:
+		c.Compile(n.Function)
+		c.emit(code.OpCall)
+
 	case *ast.ExpressionStatement:
 		err := c.Compile(n.Expression)
 		if err != nil {

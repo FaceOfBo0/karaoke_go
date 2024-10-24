@@ -16,6 +16,54 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
+func TestFunctionCalls(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: "fn () { 5 + 10 }()",
+			expectedConst: []interface{}{5, 10, &object.CompiledFunction{
+				Instructions: concatInstructions([]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpAdd),
+				}),
+			}},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
+func TestFunctionLiterals(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: "fn () { 5 + 10 }",
+			expectedConst: []interface{}{5, 10, []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+			},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func TestIndexExpressions(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
