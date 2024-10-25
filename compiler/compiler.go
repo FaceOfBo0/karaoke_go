@@ -80,7 +80,8 @@ func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 
 func (c *Compiler) deleteLastOpPop() {
 	if c.scopes[c.scopeIdx].lastInst.Opcode == code.OpPop {
-		c.scopes[c.scopeIdx].instructions = c.scopes[c.scopeIdx].instructions[:c.scopes[c.scopeIdx].lastInst.Pos]
+		c.scopes[c.scopeIdx].instructions =
+			c.scopes[c.scopeIdx].instructions[:c.scopes[c.scopeIdx].lastInst.Pos]
 		c.scopes[c.scopeIdx].lastInst = c.scopes[c.scopeIdx].prevInst
 	}
 }
@@ -139,7 +140,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		oldInsts := c.scopes[c.scopeIdx].instructions
 		c.Compile(n.Body)
 
-		funcObj := &object.CompiledFunction{Instructions: c.scopes[c.scopeIdx].instructions}
+		funcObj := &object.CompiledFunction{
+			Instructions: c.scopes[c.scopeIdx].instructions
+		}
 		c.scopes[c.scopeIdx].instructions = oldInsts
 
 		c.emit(code.OpConstant, c.addConstant(funcObj))
@@ -185,7 +188,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		jmpIdx := c.emit(code.OpJump, 9999)
 
-		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpNotTruthyIdx+1:], uint16(len(c.scopes[c.scopeIdx].instructions)))
+		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpNotTruthyIdx+1:],
+			uint16(len(c.scopes[c.scopeIdx].instructions)))
 
 		if n.Alternative != nil {
 			err = c.Compile(n.Alternative)
@@ -198,7 +202,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpNull)
 		}
 
-		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpIdx+1:], uint16(len(c.scopes[c.scopeIdx].instructions)))
+		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpIdx+1:],
+			uint16(len(c.scopes[c.scopeIdx].instructions)))
 
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
