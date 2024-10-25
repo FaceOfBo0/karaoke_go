@@ -55,7 +55,7 @@ func New() *Compiler {
 }
 
 func (c *Compiler) enterScope() {
-	//TODO: test
+
 }
 
 func (c *Compiler) leaveScope() {
