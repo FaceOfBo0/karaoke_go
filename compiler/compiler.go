@@ -80,7 +80,7 @@ func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 
 func (c *Compiler) deleteLastOpPop() {
 	if c.scopes[c.scopeIdx].lastInst.Opcode == code.OpPop {
-		c.scopes[c.scopeIdx].instructions = c.scopes[c.scopeIdx].instructions[:c.lastInst.Pos]
+		c.scopes[c.scopeIdx].instructions = c.scopes[c.scopeIdx].instructions[:c.scopes[c.scopeIdx].lastInst.Pos]
 		c.scopes[c.scopeIdx].lastInst = c.scopes[c.scopeIdx].prevInst
 	}
 }
