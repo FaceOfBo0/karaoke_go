@@ -11,13 +11,11 @@ import (
 )
 
 type Compiler struct {
-	instructions code.Instructions
-	constants    []object.Object
-	symbolTable  *SymbolTable
-	lastInst     EmittedInstruction
-	prevInst     EmittedInstruction
-	scopes       []CompilationScope
-	scopeIdx     int
+	constants   []object.Object
+	symbolTable *SymbolTable
+
+	scopes   []CompilationScope
+	scopeIdx int
 }
 
 type Bytecode struct {
@@ -44,14 +42,16 @@ func NewWithState(s *SymbolTable, consts []object.Object) *Compiler {
 }
 
 func New() *Compiler {
-	return &Compiler{
+	mainScope := CompilationScope{
 		instructions: code.Instructions{},
-		constants:    []object.Object{},
-		symbolTable:  NewSymbolTable(),
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
-		scopes:       []CompilationScope{{}},
-		scopeIdx:     0,
+	}
+	return &Compiler{
+		constants:   []object.Object{},
+		symbolTable: NewSymbolTable(),
+		scopes:      []CompilationScope{mainScope},
+		scopeIdx:    0,
 	}
 }
 
@@ -88,12 +88,20 @@ func (c *Compiler) deleteLastOpPop() {
 
 func (c *Compiler) enterScope() {
 	c.scopeIdx++
-	c.scopes = append(c.scopes, CompilationScope{})
+	c.scopes = append(c.scopes, CompilationScope{
+		instructions: code.Instructions{},
+		lastInst:     EmittedInstruction{},
+		prevInst:     EmittedInstruction{},
+	})
 }
 
-func (c *Compiler) leaveScope() {
+func (c *Compiler) leaveScope() code.Instructions {
+	insts := c.scopes[c.scopeIdx].instructions
+
 	c.scopeIdx--
 	c.scopes = c.scopes[:len(c.scopes)-1]
+
+	return insts
 }
 
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
@@ -131,20 +139,33 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.ReturnStatement:
-		c.Compile(n.ReturnValue)
-		c.deleteLastOpPop()
+		err := c.Compile(n.ReturnValue)
+		if err != nil {
+			return err
+		}
+
 		c.emit(code.OpReturnValue)
 
 	case *ast.FunctionLiteral:
-		// save the old instruction state to override the compilers instructions
-		oldInsts := c.scopes[c.scopeIdx].instructions
-		c.Compile(n.Body)
+		c.enterScope()
 
-		funcObj := &object.CompiledFunction{
-			Instructions: c.scopes[c.scopeIdx].instructions,
+		if len(n.Body.Statements) == 0 {
+			c.emit(code.OpReturn)
+		} else {
+			err := c.Compile(n.Body)
+			if err != nil {
+				return err
+			}
+
+			c.deleteLastOpPop()
+			if n.Body.Statements[len(n.Body.Statements)-1].TokenLiteral() != "return" {
+				c.emit(code.OpReturnValue)
+			}
 		}
-		c.scopes[c.scopeIdx].instructions = oldInsts
 
+		insts := c.leaveScope()
+
+		funcObj := &object.CompiledFunction{Instructions: insts}
 		c.emit(code.OpConstant, c.addConstant(funcObj))
 
 	case *ast.CallExpression:

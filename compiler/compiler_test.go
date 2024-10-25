@@ -44,8 +44,7 @@ func TestCompilerScopes(t *testing.T) {
 
 	compiler.leaveScope()
 	if compiler.scopeIdx != 0 {
-		t.Errorf("scopeIdx wrong. got=%d, want=%d",
-			compiler.scopeIdx, 0)
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
 	}
 
 	compiler.emit(code.OpAdd)
@@ -68,33 +67,122 @@ func TestCompilerScopes(t *testing.T) {
 	}
 }
 
-// func TestFunctionCalls(t *testing.T) {
-// 	tests := []CompilerTestCase{
-// 		{
-// 			input: "fn () { 5 + 10 }()",
-// 			expectedConst: []interface{}{5, 10, &object.CompiledFunction{
-// 				Instructions: concatInstructions([]code.Instructions{
-// 					code.Make(code.OpConstant, 0),
-// 					code.Make(code.OpConstant, 1),
-// 					code.Make(code.OpAdd),
-// 				}),
-// 			}},
-// 			expectedInsts: []code.Instructions{
-// 				code.Make(code.OpConstant, 0),
-// 				code.Make(code.OpConstant, 1),
-// 				code.Make(code.OpAdd),
-// 				code.Make(code.OpConstant, 2),
-// 				code.Make(code.OpCall),
-// 				code.Make(code.OpPop),
-// 			},
-// 		},
-// 	}
-
-// 	runCompilerTests(t, tests)
-// }
-
-func TestFunctionLiterals(t *testing.T) {
+func TestFunctionCalls(t *testing.T) {
 	tests := []CompilerTestCase{
+		{
+			input: `fn() { 24 }();`,
+			expectedConst: []interface{}{
+				24,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0), // The literal "24"
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 1), // The compiled function
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: "fn () { 5 + 10 }();",
+			expectedConst: []interface{}{
+				5,
+				10,
+				&object.CompiledFunction{
+					Instructions: concatInstructions([]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpConstant, 1),
+						code.Make(code.OpAdd),
+						code.Make(code.OpReturnValue),
+					}),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: `
+			let noArg = fn() { 24 };
+			noArg();
+			`,
+			expectedConst: []interface{}{
+				24,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0), // The literal "24"
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 1), // The compiled function
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
+func TestFunctionsWithoutReturnValue(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: `fn() { }`,
+			expectedConst: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpReturn),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+	runCompilerTests(t, tests)
+}
+
+func TestFunctions(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: `fn() { 1; 2 }`,
+			expectedConst: []interface{}{
+				1,
+				2,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpPop),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: "fn () { 5 + 10 }",
+			expectedConst: []interface{}{
+				5,
+				10,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpAdd),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
 		{
 			input: "fn () { return 5 + 10 }",
 			expectedConst: []interface{}{
@@ -104,6 +192,23 @@ func TestFunctionLiterals(t *testing.T) {
 					code.Make(code.OpConstant, 0),
 					code.Make(code.OpConstant, 1),
 					code.Make(code.OpAdd),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: "fn () { return 15 - 5 }",
+			expectedConst: []interface{}{
+				15,
+				5,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpSub),
 					code.Make(code.OpReturnValue),
 				},
 			},

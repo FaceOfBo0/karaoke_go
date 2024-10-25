@@ -34,6 +34,16 @@ func TestIndexExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestFunctionCalls(t *testing.T) {
+	tests := []vmTestCase{
+		{"fn() { return 5 + 10 }()", 15},
+		{"fn() { return 15 - 5 }()", 10},
+		{"fn() { return 5 * 5 }()", 25},
+		{"fn() { return 10 / 2 }()", 5},
+	}
+	runVmTests(t, tests)
+}
+
 func TestHashLiterals(t *testing.T) {
 	tests := []vmTestCase{
 		{`{1: 2, 2: 4, 3: 6}`,
