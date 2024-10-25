@@ -50,19 +50,9 @@ func New() *Compiler {
 		symbolTable:  NewSymbolTable(),
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
-		scopes:       []CompilationScope{{}},
+		scopes:       []CompilationScope{},
 		scopeIdx:     0,
 	}
-}
-
-func (c *Compiler) enterScope() {
-	c.scopeIdx++
-	c.scopes = append(c.scopes, CompilationScope{})
-}
-
-func (c *Compiler) leaveScope() {
-	c.scopeIdx--
-	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
@@ -93,6 +83,16 @@ func (c *Compiler) deleteLastOpPop() {
 		c.instructions = c.instructions[:c.lastInst.Pos]
 		c.lastInst = c.prevInst
 	}
+}
+
+func (c *Compiler) enterScope() {
+	c.scopeIdx++
+	c.scopes = append(c.scopes, CompilationScope{})
+}
+
+func (c *Compiler) leaveScope() {
+	c.scopeIdx--
+	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
