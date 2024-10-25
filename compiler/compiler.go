@@ -50,14 +50,14 @@ func New() *Compiler {
 		symbolTable:  NewSymbolTable(),
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
-		scopes:       []CompilationScope{},
+		scopes:       []CompilationScope{{}},
 		scopeIdx:     0,
 	}
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
-		Instructions: c.instructions,
+		Instructions: c.scopes[c.scopeIdx].instructions,
 		Constants:    c.constants,
 	}
 }
@@ -68,20 +68,20 @@ func (c *Compiler) addConstant(con object.Object) int {
 }
 
 func (c *Compiler) addInstruction(in code.Instructions) int {
-	posInst := len(c.instructions)
-	c.instructions = append(c.instructions, in...)
+	posInst := len(c.scopes[c.scopeIdx].instructions)
+	c.scopes[c.scopeIdx].instructions = append(c.scopes[c.scopeIdx].instructions, in...)
 	return posInst
 }
 
 func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
-	c.prevInst = c.lastInst
-	c.lastInst = EmittedInstruction{Opcode: op, Pos: pos}
+	c.scopes[c.scopeIdx].prevInst = c.scopes[c.scopeIdx].lastInst
+	c.scopes[c.scopeIdx].lastInst = EmittedInstruction{Opcode: op, Pos: pos}
 }
 
 func (c *Compiler) deleteLastOpPop() {
-	if c.lastInst.Opcode == code.OpPop {
-		c.instructions = c.instructions[:c.lastInst.Pos]
-		c.lastInst = c.prevInst
+	if c.scopes[c.scopeIdx].lastInst.Opcode == code.OpPop {
+		c.scopes[c.scopeIdx].instructions = c.scopes[c.scopeIdx].instructions[:c.lastInst.Pos]
+		c.scopes[c.scopeIdx].lastInst = c.scopes[c.scopeIdx].prevInst
 	}
 }
 
@@ -136,11 +136,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 	case *ast.FunctionLiteral:
 		// save the old instruction state to override the compilers instructions
-		oldInsts := c.instructions
+		oldInsts := c.scopes[c.scopeIdx].instructions
 		c.Compile(n.Body)
 
-		funcObj := &object.CompiledFunction{Instructions: c.instructions}
-		c.instructions = oldInsts
+		funcObj := &object.CompiledFunction{Instructions: c.scopes[c.scopeIdx].instructions}
+		c.scopes[c.scopeIdx].instructions = oldInsts
 
 		c.emit(code.OpConstant, c.addConstant(funcObj))
 
@@ -185,7 +185,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		jmpIdx := c.emit(code.OpJump, 9999)
 
-		code.PutUint16(c.instructions[jmpNotTruthyIdx+1:], uint16(len(c.instructions)))
+		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpNotTruthyIdx+1:], uint16(len(c.scopes[c.scopeIdx].instructions)))
 
 		if n.Alternative != nil {
 			err = c.Compile(n.Alternative)
@@ -198,7 +198,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpNull)
 		}
 
-		code.PutUint16(c.instructions[jmpIdx+1:], uint16(len(c.instructions)))
+		code.PutUint16(c.scopes[c.scopeIdx].instructions[jmpIdx+1:], uint16(len(c.scopes[c.scopeIdx].instructions)))
 
 	case *ast.PrefixExpression:
 		err := c.Compile(n.Right)
