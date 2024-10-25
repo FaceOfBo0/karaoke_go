@@ -141,7 +141,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.Compile(n.Body)
 
 		funcObj := &object.CompiledFunction{
-			Instructions: c.scopes[c.scopeIdx].instructions
+			Instructions: c.scopes[c.scopeIdx].instructions,
 		}
 		c.scopes[c.scopeIdx].instructions = oldInsts
 
