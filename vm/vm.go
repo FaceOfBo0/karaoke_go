@@ -45,6 +45,14 @@ func (vm *VM) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpCall:
+			funcObj := vm.stackPop()
+
+			fnObj, ok := funcObj.(*object.CompiledFunction)
+			if !ok {
+				return fmt.Errorf("wrong type for compiled function: %s", fnObj.Type())
+			}
+
 		case code.OpIndex:
 			idxObj := vm.stackPop()
 			arrObj := vm.stackPop()
