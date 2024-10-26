@@ -34,13 +34,61 @@ func TestIndexExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
-func TestFunctionCalls(t *testing.T) {
+func TestFunctionCallsWithoutArguments(t *testing.T) {
 	tests := []vmTestCase{
 		{"fn() { return 5 + 10 }()", 15},
 		{"fn() { return 15 - 5 }()", 10},
 		{"fn() { return 5 * 5 }()", 25},
 		{"fn() { return 10 / 2 }()", 5},
 		{"fn() { }()", Null},
+		{`let fivePlusTen = fn() { 34-98; }; fivePlusTen();`, -64},
+		{
+			input: `
+			let one = fn() { 1; };
+			let two = fn() { 2; };
+			one() + two()
+			`,
+			expected: 3,
+		},
+		{
+			input: `
+			let a = fn() { 1 };
+			let b = fn() { a() + 1 };
+			let c = fn() { b() + 1 };
+			c();
+			`,
+			expected: 3,
+		},
+		{
+			input: `
+			let earlyExit = fn() { return 99; 100; };
+			earlyExit();
+			`,
+			expected: 99,
+		},
+		{
+			input: `
+			let earlyExit = fn() { return 99; return 100; };
+			earlyExit();
+			`,
+			expected: 99,
+		},
+		{
+			input: `
+			let noReturn = fn() { };
+			noReturn();
+			`,
+			expected: Null,
+		},
+		{
+			input: `
+			let noReturn = fn() { };
+			let noReturnTwo = fn() { noReturn(); };
+			noReturn();
+			noReturnTwo();
+			`,
+			expected: Null,
+		},
 	}
 	runVmTests(t, tests)
 }

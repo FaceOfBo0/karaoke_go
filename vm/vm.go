@@ -78,11 +78,23 @@ func (vm *VM) Run() error {
 
 		case code.OpReturnValue:
 			retVal := vm.stackPop()
+
+			vm.popFrame()
 			vm.stackPop()
-			vm.stackPush(retVal)
+
+			err := vm.stackPush(retVal)
+			if err != nil {
+				return err
+			}
 
 		case code.OpReturn:
-			vm.stackPush(Null)
+			vm.popFrame()
+			vm.stackPop()
+
+			err := vm.stackPush(Null)
+			if err != nil {
+				return err
+			}
 
 		case code.OpCall:
 			funcObj := vm.StackTop()
@@ -94,10 +106,6 @@ func (vm *VM) Run() error {
 
 			funcFrame := NewFrame(fnObj)
 			vm.pushFrame(funcFrame)
-
-			vm.Run()
-
-			vm.popFrame()
 
 		case code.OpIndex:
 			idxObj := vm.stackPop()
