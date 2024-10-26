@@ -40,6 +40,7 @@ func TestFunctionCalls(t *testing.T) {
 		{"fn() { return 15 - 5 }()", 10},
 		{"fn() { return 5 * 5 }()", 25},
 		{"fn() { return 10 / 2 }()", 5},
+		{"fn() { }()", Null},
 	}
 	runVmTests(t, tests)
 }
