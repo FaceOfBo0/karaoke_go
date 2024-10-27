@@ -4,6 +4,7 @@ type SymbolScope string
 
 const (
 	GlobalScope SymbolScope = "GLOBAL"
+	LocalScope  SymbolScope = "LOCAL"
 )
 
 type Symbol struct {
@@ -15,6 +16,7 @@ type Symbol struct {
 type SymbolTable struct {
 	store   map[string]Symbol
 	numDefs int
+	Outer   *SymbolTable
 }
 
 func NewSymbolTable() *SymbolTable {

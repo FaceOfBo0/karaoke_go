@@ -16,55 +16,46 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
-func TestCompilerScopes(t *testing.T) {
-	compiler := New()
-	if compiler.scopeIdx != 0 {
-		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
+func TestLocalBindings(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: `fn() { let one = 1 }();`,
+			expectedConst: []interface{}{
+				1,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0), // The literal "24"
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 1), // The compiled function
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: "fn () { 5 + 10 }();",
+			expectedConst: []interface{}{
+				5,
+				10,
+				&object.CompiledFunction{
+					Instructions: concatInstructions([]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpConstant, 1),
+						code.Make(code.OpAdd),
+						code.Make(code.OpReturnValue),
+					}),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
-	compiler.emit(code.OpMul)
-
-	compiler.enterScope()
-	if compiler.scopeIdx != 1 {
-		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 1)
-	}
-
-	compiler.emit(code.OpSub)
-
-	if len(compiler.scopes[compiler.scopeIdx].instructions) != 1 {
-		t.Errorf("instructions length wrong. got=%d",
-			len(compiler.scopes[compiler.scopeIdx].instructions))
-	}
-
-	last := compiler.scopes[compiler.scopeIdx].lastInst
-	if last.Opcode != code.OpSub {
-		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
-			last.Opcode, code.OpSub)
-	}
-
-	compiler.leaveScope()
-	if compiler.scopeIdx != 0 {
-		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
-	}
-
-	compiler.emit(code.OpAdd)
-
-	if len(compiler.scopes[compiler.scopeIdx].instructions) != 2 {
-		t.Errorf("instructions length wrong. got=%d",
-			len(compiler.scopes[compiler.scopeIdx].instructions))
-	}
-
-	last = compiler.scopes[compiler.scopeIdx].lastInst
-	if last.Opcode != code.OpAdd {
-		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
-			last.Opcode, code.OpAdd)
-	}
-
-	previous := compiler.scopes[compiler.scopeIdx].prevInst
-	if previous.Opcode != code.OpMul {
-		t.Errorf("previousInstruction.Opcode wrong. got=%d, want=%d",
-			previous.Opcode, code.OpMul)
-	}
+	runCompilerTests(t, tests)
 }
 
 func TestFunctionCalls(t *testing.T) {
@@ -689,6 +680,57 @@ func TestBooleanExpressions(t *testing.T) {
 		},
 	}
 	runCompilerTests(t, tests)
+}
+
+func TestCompilerScopes(t *testing.T) {
+	compiler := New()
+	if compiler.scopeIdx != 0 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
+	}
+
+	compiler.emit(code.OpMul)
+
+	compiler.enterScope()
+	if compiler.scopeIdx != 1 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 1)
+	}
+
+	compiler.emit(code.OpSub)
+
+	if len(compiler.scopes[compiler.scopeIdx].instructions) != 1 {
+		t.Errorf("instructions length wrong. got=%d",
+			len(compiler.scopes[compiler.scopeIdx].instructions))
+	}
+
+	last := compiler.scopes[compiler.scopeIdx].lastInst
+	if last.Opcode != code.OpSub {
+		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
+			last.Opcode, code.OpSub)
+	}
+
+	compiler.leaveScope()
+	if compiler.scopeIdx != 0 {
+		t.Errorf("scopeIdx wrong. got=%d, want=%d", compiler.scopeIdx, 0)
+	}
+
+	compiler.emit(code.OpAdd)
+
+	if len(compiler.scopes[compiler.scopeIdx].instructions) != 2 {
+		t.Errorf("instructions length wrong. got=%d",
+			len(compiler.scopes[compiler.scopeIdx].instructions))
+	}
+
+	last = compiler.scopes[compiler.scopeIdx].lastInst
+	if last.Opcode != code.OpAdd {
+		t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
+			last.Opcode, code.OpAdd)
+	}
+
+	previous := compiler.scopes[compiler.scopeIdx].prevInst
+	if previous.Opcode != code.OpMul {
+		t.Errorf("previousInstruction.Opcode wrong. got=%d, want=%d",
+			previous.Opcode, code.OpMul)
+	}
 }
 
 func runCompilerTests(t *testing.T, tests []CompilerTestCase) {

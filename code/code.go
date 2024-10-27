@@ -8,6 +8,13 @@ import (
 
 type Instructions []byte
 
+type Opcode byte
+
+type Definition struct {
+	Name          string
+	OperandWidths []int
+}
+
 func (inst Instructions) String() string {
 	offset := 0
 	output := ""
@@ -30,69 +37,12 @@ func (inst Instructions) String() string {
 	return output
 }
 
-type Opcode byte
-
-type Definition struct {
-	Name          string
-	OperandWidths []int
-}
-
-const (
-	OpConstant Opcode = iota
-	OpAdd
-	OpSub
-	OpMul
-	OpDiv
-	OpPop
-	OpTrue
-	OpFalse
-	OpEqual
-	OpNotEqual
-	OpGreaterThan
-	OpMinus
-	OpBang
-	OpJumpNotTruthy
-	OpJump
-	OpNull
-	OpGetGlobal
-	OpSetGlobal
-	OpArray
-	OpHash
-	OpIndex
-	OpCall
-	OpReturnValue
-	OpReturn
-)
-
-var definitions = map[Opcode]*Definition{
-	OpConstant:      {"OpConstant", []int{2}},
-	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
-	OpJump:          {"OpJump", []int{2}},
-	OpGetGlobal:     {"OpGetGlobal", []int{2}},
-	OpSetGlobal:     {"OpSetGlobal", []int{2}},
-	OpArray:         {"OpArray", []int{2}},
-	OpHash:          {"OpHash", []int{2}},
-	OpAdd:           {"OpAdd", []int{}},
-	OpSub:           {"OpSub", []int{}},
-	OpMul:           {"OpMul", []int{}},
-	OpDiv:           {"OpDiv", []int{}},
-	OpPop:           {"OpPop", []int{}},
-	OpTrue:          {"OpTrue", []int{}},
-	OpFalse:         {"OpFalse", []int{}},
-	OpEqual:         {"OpEqual", []int{}},
-	OpNotEqual:      {"OpNotEqual", []int{}},
-	OpGreaterThan:   {"OpGreaterThan", []int{}},
-	OpMinus:         {"OpMinus", []int{}},
-	OpBang:          {"OpBang", []int{}},
-	OpNull:          {"OpNull", []int{}},
-	OpIndex:         {"OpIndex", []int{}},
-	OpCall:          {"OpCall", []int{}},
-	OpReturnValue:   {"OpReturnValue", []int{}},
-	OpReturn:        {"OpReturn", []int{}},
-}
-
 func ReadUint16(inst []byte) uint16 {
 	return binary.BigEndian.Uint16(inst)
+}
+
+func ReadUint8(inst []byte) uint8 {
+	return uint8(inst[0])
 }
 
 func PutUint16(inst []byte, val uint16) {
@@ -104,6 +54,8 @@ func ReadOperands(def *Definition, inst []byte) ([]int, int) {
 	offset := 0
 	for i, width := range def.OperandWidths {
 		switch width {
+		case 1:
+			operands[i] = int(ReadUint8(inst[offset:]))
 		case 2:
 			operands[i] = int(ReadUint16(inst[offset:]))
 		}
@@ -131,6 +83,8 @@ func Make(op Opcode, operands ...int) []byte {
 	for i, el := range operands {
 		width := def.OperandWidths[i]
 		switch width {
+		case 1:
+			inst[offset] = byte(el)
 		case 2:
 			PutUint16(inst[offset:], uint16(el))
 		}
@@ -148,3 +102,61 @@ func Lookup(op byte) (*Definition, error) {
 
 	return def, nil
 }
+
+var definitions = map[Opcode]*Definition{
+	OpConstant:      {"OpConstant", []int{2}},
+	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
+	OpJump:          {"OpJump", []int{2}},
+	OpGetGlobal:     {"OpGetGlobal", []int{2}},
+	OpSetGlobal:     {"OpSetGlobal", []int{2}},
+	OpGetLocal:      {"OpGetLocal", []int{1}},
+	OpSetLocal:      {"OpSetLocal", []int{1}},
+	OpArray:         {"OpArray", []int{2}},
+	OpHash:          {"OpHash", []int{2}},
+	OpAdd:           {"OpAdd", []int{}},
+	OpSub:           {"OpSub", []int{}},
+	OpMul:           {"OpMul", []int{}},
+	OpDiv:           {"OpDiv", []int{}},
+	OpPop:           {"OpPop", []int{}},
+	OpTrue:          {"OpTrue", []int{}},
+	OpFalse:         {"OpFalse", []int{}},
+	OpEqual:         {"OpEqual", []int{}},
+	OpNotEqual:      {"OpNotEqual", []int{}},
+	OpGreaterThan:   {"OpGreaterThan", []int{}},
+	OpMinus:         {"OpMinus", []int{}},
+	OpBang:          {"OpBang", []int{}},
+	OpNull:          {"OpNull", []int{}},
+	OpIndex:         {"OpIndex", []int{}},
+	OpCall:          {"OpCall", []int{}},
+	OpReturnValue:   {"OpReturnValue", []int{}},
+	OpReturn:        {"OpReturn", []int{}},
+}
+
+const (
+	OpConstant Opcode = iota
+	OpAdd
+	OpSub
+	OpMul
+	OpDiv
+	OpPop
+	OpTrue
+	OpFalse
+	OpEqual
+	OpNotEqual
+	OpGreaterThan
+	OpMinus
+	OpBang
+	OpJumpNotTruthy
+	OpJump
+	OpNull
+	OpGetGlobal
+	OpSetGlobal
+	OpArray
+	OpHash
+	OpIndex
+	OpCall
+	OpReturnValue
+	OpReturn
+	OpGetLocal
+	OpSetLocal
+)
