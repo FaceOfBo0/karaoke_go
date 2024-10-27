@@ -168,13 +168,6 @@ func (c *Compiler) Compile(node ast.Node) error {
 		funcObj := &object.CompiledFunction{Instructions: insts}
 		c.emit(code.OpConstant, c.addConstant(funcObj))
 
-	case *ast.ExpressionStatement:
-		err := c.Compile(n.Expression)
-		if err != nil {
-			return err
-		}
-		c.emit(code.OpPop)
-
 	case *ast.CallExpression:
 		err := c.Compile(n.Function)
 		if err != nil {
@@ -182,6 +175,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(code.OpCall)
+
+	case *ast.ExpressionStatement:
+		err := c.Compile(n.Expression)
+		if err != nil {
+			return err
+		}
+		c.emit(code.OpPop)
 
 	case *ast.IndexExpression:
 		err := c.Compile(n.Left)
