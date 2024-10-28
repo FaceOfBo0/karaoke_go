@@ -196,6 +196,22 @@ func (vm *VM) Run() error {
 				return err
 			}
 
+		case code.OpSetLocal:
+			objIdx := uint8(ins[ip+1])
+			vm.currenFrame().ip += 1
+
+			vm.sp -= int(objIdx)
+			vm.stackPop()
+
+		case code.OpGetLocal:
+			objIdx := uint8(ins[ip+1])
+			vm.currenFrame().ip += 1
+
+			err := vm.stackPush(&object.Integer{Value: int64(objIdx)})
+			if err != nil {
+				return err
+			}
+
 		case code.OpNull:
 			vm.stackPush(Null)
 

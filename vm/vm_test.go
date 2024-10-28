@@ -15,22 +15,54 @@ type vmTestCase struct {
 	expected interface{}
 }
 
-func TestIndexExpressions(t *testing.T) {
+func TestCallingFunctionsWithBindings(t *testing.T) {
 	tests := []vmTestCase{
-		{"{1: 2}[2 - 1]", 2},
-		{"[1, 2, 3][1 + 1]", 3},
-		{"[1, 2, 3][1]", 2},
-		{"[1, 2, 3][0 + 2]", 3},
-		{"[[1, 1, 1]][0][0]", 1},
-		{"{1: 1, 2: 2}[1]", 1},
-		{"{1: 1, 2: 2}[2]", 2},
-		{"{}[0]", Null},
-		{"{1: 1}[0]", Null},
-		{"[][0]", Null},
-		{"[1, 2, 3][99]", Null},
-		{"[1][-1]", Null},
+		{
+			input: `
+				let one = fn() { let one = 1; one };
+				one();
+				`,
+			expected: 1,
+		},
+		{
+			input: `
+				let oneAndTwo = fn() { let one = 1; let two = 2; one + two; };
+				oneAndTwo();
+				`,
+			expected: 3,
+		},
+		{
+			input: `
+				let oneAndTwo = fn() { let one = 1; let two = 2; one + two; };
+				let threeAndFour = fn() { let three = 3; let four = 4; three + four; };
+				oneAndTwo() + threeAndFour();
+				`,
+			expected: 10,
+		},
+		{
+			input: `
+				let firstFoobar = fn() { let foobar = 50; foobar; };
+				let secondFoobar = fn() { let foobar = 100; foobar; };
+				firstFoobar() + secondFoobar();
+				`,
+			expected: 150,
+		},
+		{
+			input: `
+				let globalSeed = 50;
+				let minusOne = fn() {
+				let num = 1;
+				globalSeed - num;
+				}
+				let minusTwo = fn() {
+				let num = 2;
+				globalSeed - num;
+				}
+				minusOne() + minusTwo();
+				`,
+			expected: 97,
+		},
 	}
-
 	runVmTests(t, tests)
 }
 
@@ -90,6 +122,25 @@ func TestFunctionCallsWithoutArguments(t *testing.T) {
 			expected: Null,
 		},
 	}
+	runVmTests(t, tests)
+}
+
+func TestIndexExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{"{1: 2}[2 - 1]", 2},
+		{"[1, 2, 3][1 + 1]", 3},
+		{"[1, 2, 3][1]", 2},
+		{"[1, 2, 3][0 + 2]", 3},
+		{"[[1, 1, 1]][0][0]", 1},
+		{"{1: 1, 2: 2}[1]", 1},
+		{"{1: 1, 2: 2}[2]", 2},
+		{"{}[0]", Null},
+		{"{1: 1}[0]", Null},
+		{"[][0]", Null},
+		{"[1, 2, 3][99]", Null},
+		{"[1][-1]", Null},
+	}
+
 	runVmTests(t, tests)
 }
 

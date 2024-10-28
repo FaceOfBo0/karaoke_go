@@ -87,20 +87,22 @@ func (c *Compiler) deleteLastOpPop() {
 }
 
 func (c *Compiler) enterScope() {
-	c.scopeIdx++
+	c.symbolTable = NewEnclosedSymbolTable(c.symbolTable)
 	c.scopes = append(c.scopes, CompilationScope{
 		instructions: code.Instructions{},
 		lastInst:     EmittedInstruction{},
 		prevInst:     EmittedInstruction{},
 	})
+
+	c.scopeIdx++
 }
 
 func (c *Compiler) leaveScope() code.Instructions {
 	insts := c.scopes[c.scopeIdx].instructions
+	c.scopes = c.scopes[:len(c.scopes)-1]
+	c.symbolTable = c.symbolTable.Outer
 
 	c.scopeIdx--
-	c.scopes = c.scopes[:len(c.scopes)-1]
-
 	return insts
 }
 
@@ -127,8 +129,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
 		symbol := c.symbolTable.Define(n.Name.Value)
-		c.emit(code.OpSetGlobal, symbol.Idx)
+		if symbol.Scope == GlobalScope {
+			c.emit(code.OpSetGlobal, symbol.Idx)
+		} else {
+			c.emit(code.OpSetLocal, symbol.Idx)
+		}
 
 	case *ast.BlockStatement:
 		for _, elm := range n.Statements {
@@ -291,7 +298,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("variable %s is undefined", n.Value)
 		}
 
-		c.emit(code.OpGetGlobal, sym.Idx)
+		if sym.Scope == GlobalScope {
+			c.emit(code.OpGetGlobal, sym.Idx)
+		} else {
+			c.emit(code.OpGetLocal, sym.Idx)
+		}
 
 	case *ast.IntegerLiteral:
 		intObj := &object.Integer{Value: n.Value}
