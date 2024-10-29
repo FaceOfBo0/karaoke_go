@@ -170,9 +170,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
+		numLocals := c.symbolTable.numDefs
 		insts := c.leaveScope()
 
-		funcObj := &object.CompiledFunction{Instructions: insts}
+		funcObj := &object.CompiledFunction{Instructions: insts, NumLocals: numLocals}
 		c.emit(code.OpConstant, c.addConstant(funcObj))
 
 	case *ast.CallExpression:

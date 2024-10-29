@@ -94,6 +94,7 @@ func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
 
 type CompiledFunction struct {
 	Instructions code.Instructions
+	NumLocals    int
 }
 
 func (cf *CompiledFunction) Type() ObjectType { return COMP_FUNCTION_OBJ }
