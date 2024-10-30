@@ -24,7 +24,6 @@ type VM struct {
 	stack     []object.Object
 	globals   []object.Object
 	sp        int
-	oldPtr    int
 }
 
 func (vm *VM) currenFrame() *Frame {
