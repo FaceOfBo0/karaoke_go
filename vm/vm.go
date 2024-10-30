@@ -24,7 +24,7 @@ type VM struct {
 	stack     []object.Object
 	globals   []object.Object
 	sp        int
-	oldPtr    int
+	basePtr   int
 }
 
 func (vm *VM) currenFrame() *Frame {
@@ -48,7 +48,7 @@ func NewWithGlobalsStore(bc *compiler.Bytecode, s []object.Object) *VM {
 }
 
 func New(bc *compiler.Bytecode) *VM {
-	mainFrame := NewFrame(&object.CompiledFunction{Instructions: bc.Instructions}, 0)
+	mainFrame := NewFrame(&object.CompiledFunction{Instructions: bc.Instructions})
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFrame
@@ -80,8 +80,8 @@ func (vm *VM) Run() error {
 		case code.OpReturnValue:
 			retVal := vm.stackPop()
 
-			frame := vm.popFrame()
-			vm.sp = frame.basePtr - 1
+			vm.popFrame()
+			vm.sp = vm.basePtr - 1
 
 			err := vm.stackPush(retVal)
 			if err != nil {
@@ -89,8 +89,8 @@ func (vm *VM) Run() error {
 			}
 
 		case code.OpReturn:
-			frame := vm.popFrame()
-			vm.sp = frame.basePtr - 1
+			vm.popFrame()
+			vm.sp = vm.basePtr - 1
 
 			err := vm.stackPush(Null)
 			if err != nil {
@@ -98,15 +98,16 @@ func (vm *VM) Run() error {
 			}
 
 		case code.OpCall:
+			vm.basePtr = vm.sp
 
 			fnObj, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
 			if !ok {
 				return fmt.Errorf("wrong type for compiled function: %s", fnObj.Type())
 			}
 
-			funcFrame := NewFrame(fnObj, vm.sp)
+			funcFrame := NewFrame(fnObj)
 			vm.pushFrame(funcFrame)
-			vm.sp = funcFrame.basePtr + fnObj.NumLocals
+			vm.sp += fnObj.NumLocals
 
 		case code.OpIndex:
 			idxObj := vm.stackPop()
@@ -201,13 +202,13 @@ func (vm *VM) Run() error {
 			objIdx := uint8(ins[ip+1])
 			vm.currenFrame().ip += 1
 
-			vm.stack[vm.currenFrame().basePtr+int(objIdx)] = vm.stackPop()
+			vm.stack[vm.basePtr+int(objIdx)] = vm.stackPop()
 
 		case code.OpGetLocal:
 			objIdx := uint8(ins[ip+1])
 			vm.currenFrame().ip += 1
 
-			err := vm.stackPush(vm.stack[vm.currenFrame().basePtr+int(objIdx)])
+			err := vm.stackPush(vm.stack[vm.basePtr+int(objIdx)])
 			if err != nil {
 				return err
 			}
