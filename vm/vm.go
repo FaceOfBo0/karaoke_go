@@ -81,7 +81,8 @@ func (vm *VM) Run() error {
 			retVal := vm.stackPop()
 
 			vm.popFrame()
-			vm.sp = vm.basePtr - 1
+			vm.sp = vm.basePtr
+			vm.stackPop()
 
 			err := vm.stackPush(retVal)
 			if err != nil {
@@ -90,7 +91,8 @@ func (vm *VM) Run() error {
 
 		case code.OpReturn:
 			vm.popFrame()
-			vm.sp = vm.basePtr - 1
+			vm.sp = vm.basePtr
+			vm.stackPop()
 
 			err := vm.stackPush(Null)
 			if err != nil {
