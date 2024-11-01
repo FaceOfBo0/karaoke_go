@@ -16,6 +16,50 @@ type CompilerTestCase struct {
 	expectedInsts []code.Instructions
 }
 
+func TestFuncsWithArguments(t *testing.T) {
+	tests := []CompilerTestCase{
+		{
+			input: `
+			fn(a,b) { a - b };
+			`,
+			expectedConst: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpGetLocal, 0),
+					code.Make(code.OpGetLocal, 1),
+					code.Make(code.OpSub),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: `
+			let add = fn(a,b) { a + b };
+			add(2,5);
+			`,
+			expectedConst: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpGetLocal, 0),
+					code.Make(code.OpGetLocal, 1),
+					code.Make(code.OpAdd),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+	runCompilerTests(t, tests)
+}
+
 func TestLocalBindings(t *testing.T) {
 	tests := []CompilerTestCase{
 		{

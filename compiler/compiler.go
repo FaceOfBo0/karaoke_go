@@ -183,7 +183,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		for _, arg := range n.Arguments {
-			err = c.Compile(arg)
+			err := c.Compile(arg)
 			if err != nil {
 				return err
 			}
