@@ -182,6 +182,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
+		for _, arg := range n.Arguments {
+			err = c.Compile(arg)
+			if err != nil {
+				return err
+			}
+		}
+
 		c.emit(code.OpCall)
 
 	case *ast.ExpressionStatement:

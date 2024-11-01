@@ -168,6 +168,23 @@ func TestFunctionsWithoutReturnValue(t *testing.T) {
 func TestFunctions(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
+			input: `let add = fn(a,b) { a + b }; add(2,5);`,
+			expectedConst: []interface{}{
+				1,
+				2,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpPop),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+		{
 			input: `fn() { 1; 2 }`,
 			expectedConst: []interface{}{
 				1,
