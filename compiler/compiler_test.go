@@ -20,18 +20,51 @@ func TestFuncsWithArguments(t *testing.T) {
 	tests := []CompilerTestCase{
 		{
 			input: `
-			fn(a,b) { a - b };
+			let oneArg = fn(a) { a };
+			oneArg(24);
 			`,
 			expectedConst: []interface{}{
 				[]code.Instructions{
 					code.Make(code.OpGetLocal, 0),
-					code.Make(code.OpGetLocal, 1),
-					code.Make(code.OpSub),
 					code.Make(code.OpReturnValue),
 				},
+				24,
 			},
 			expectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpCall, 1),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: `
+			let manyArg = fn(a, b, c) { a; b; c; };
+			manyArg(24, 25, 26);
+			`,
+			expectedConst: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpGetLocal, 0),
+					code.Make(code.OpPop),
+					code.Make(code.OpGetLocal, 1),
+					code.Make(code.OpPop),
+					code.Make(code.OpGetLocal, 2),
+					code.Make(code.OpReturnValue),
+				},
+				24,
+				25,
+				26,
+			},
+			expectedInsts: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpCall, 3),
 				code.Make(code.OpPop),
 			},
 		},
@@ -47,12 +80,16 @@ func TestFuncsWithArguments(t *testing.T) {
 					code.Make(code.OpAdd),
 					code.Make(code.OpReturnValue),
 				},
+				2,
+				5,
 			},
 			expectedInsts: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpSetGlobal, 0),
 				code.Make(code.OpGetGlobal, 0),
-				code.Make(code.OpCall),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpCall, 2),
 				code.Make(code.OpPop),
 			},
 		},
@@ -211,23 +248,6 @@ func TestFunctionsWithoutReturnValue(t *testing.T) {
 
 func TestFunctions(t *testing.T) {
 	tests := []CompilerTestCase{
-		{
-			input: `let add = fn(a,b) { a + b }; add(2,5);`,
-			expectedConst: []interface{}{
-				1,
-				2,
-				[]code.Instructions{
-					code.Make(code.OpConstant, 0),
-					code.Make(code.OpPop),
-					code.Make(code.OpConstant, 1),
-					code.Make(code.OpReturnValue),
-				},
-			},
-			expectedInsts: []code.Instructions{
-				code.Make(code.OpConstant, 2),
-				code.Make(code.OpPop),
-			},
-		},
 		{
 			input: `fn() { 1; 2 }`,
 			expectedConst: []interface{}{

@@ -100,16 +100,19 @@ func (vm *VM) Run() error {
 			}
 
 		case code.OpCall:
-			vm.basePtr = vm.sp
+			numArgs := uint8(ins[ip+1])
+			vm.currenFrame().ip += 1
 
-			fnObj, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
+			vm.basePtr = vm.sp - int(numArgs)
+
+			fnObj, ok := vm.stack[vm.sp-int(numArgs)-1].(*object.CompiledFunction)
 			if !ok {
-				return fmt.Errorf("wrong type for compiled function: %s", fnObj.Type())
+				return fmt.Errorf("wrong type for compiled function: %s", vm.stack[vm.sp-1].Type())
 			}
 
 			funcFrame := NewFrame(fnObj)
 			vm.pushFrame(funcFrame)
-			vm.sp += fnObj.NumLocals
+			vm.sp += (fnObj.NumLocals - int(numArgs))
 
 		case code.OpIndex:
 			idxObj := vm.stackPop()

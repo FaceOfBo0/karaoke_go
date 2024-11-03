@@ -156,6 +156,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.FunctionLiteral:
 		c.enterScope()
 
+		//slices.Reverse(n.Parameters)
+		for _, par := range n.Parameters {
+			c.symbolTable.Define(par.Value)
+		}
+
 		if len(n.Body.Statements) == 0 {
 			c.emit(code.OpReturn)
 		} else {
@@ -189,7 +194,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-		c.emit(code.OpCall)
+		c.emit(code.OpCall, len(n.Arguments))
 
 	case *ast.ExpressionStatement:
 		err := c.Compile(n.Expression)
